@@ -346,6 +346,7 @@ require('lazy').setup({
     event = 'VimEnter',
     dependencies = {
       'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope-media-files.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
         'nvim-telescope/telescope-fzf-native.nvim',
 
@@ -388,20 +389,32 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          mappings = {
+            -- i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+          },
+          preview = {
+            check_mime_type = true,
+          },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = { require('telescope.themes').get_dropdown() },
+          media_files = {
+            backend = 'chafa',
+            filetypes = { 'png', 'webp', 'jpg', 'jpeg', 'svg', 'pdf' },
+            find_command = 'fd',
+            chafa_opts = {
+              all = { '--symbols', 'all', '--color-space', 'din99d' },
+            },
+          },
         },
       }
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'media_files')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -416,6 +429,8 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader>sc', builtin.commands, { desc = '[S]earch [C]ommands' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+
+      vim.keymap.set('n', '<leader>sm', function() require('telescope').extensions.media_files.media_files() end, { desc = '[S]earch [M]edia files' })
 
       -- This runs on LSP attach per buffer (see main LSP attach function in 'neovim/nvim-lspconfig' config for more info,
       -- it is better explained there). This allows easily switching between pickers if you prefer using something else!
@@ -612,7 +627,6 @@ require('lazy').setup({
         -- ts_ls = {},
 
         ols = {}, -- odin lsp
-        odinfmt = {}, -- odin fmt
 
         stylua = {}, -- Used to format Lua code
 
@@ -697,6 +711,16 @@ require('lazy').setup({
           }
         end
       end,
+
+      formatters = {
+        odinfmt = {
+          -- Change where to find the command if it isn't in your path.
+          command = 'odinfmt',
+          args = { '-stdin' },
+          stdin = true,
+        },
+      },
+
       formatters_by_ft = {
         lua = { 'stylua' },
         odin = { 'odinfmt' },
@@ -798,7 +822,12 @@ require('lazy').setup({
       fuzzy = { implementation = 'lua' },
 
       -- Shows a signature help window while you type arguments for a function
-      signature = { enabled = true },
+      signature = {
+        enabled = true,
+        window = {
+          treesitter_highlighting = true,
+        },
+      },
     },
   },
 
@@ -880,7 +909,7 @@ require('lazy').setup({
     branch = 'main',
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'odin' }
       require('nvim-treesitter').install(parsers)
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
@@ -952,6 +981,11 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'blink-cmp-signature', -- หรือ "blink-cmp-signature-help"
+  callback = function(ev) vim.bo[ev.buf].filetype = 'markdown' end,
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
