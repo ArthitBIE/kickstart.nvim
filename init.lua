@@ -21,6 +21,8 @@ vim.o.cursorline = true
 vim.o.scrolloff = 10
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+-- vim.api.nvim_set_hl(0, 'NonText', { fg = '#6e738d' })
+-- vim.api.nvim_set_hl(0, 'SpecialKey', { fg = '#6e738d' })
 
 -- [Search]
 vim.o.ignorecase = true
